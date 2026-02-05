@@ -1,6 +1,6 @@
 # MimiClaw Architecture
 
-> ESP32-S3 AI Agent firmware — a C/FreeRTOS reimplementation of [nanobot](../nanobot/)'s core agent capabilities.
+> ESP32-S3 AI Agent firmware — C/FreeRTOS implementation running on bare metal (no Linux).
 
 ---
 

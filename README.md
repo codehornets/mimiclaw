@@ -1,114 +1,105 @@
-# MimiClaw: Pocket AI Assistant with Shareable Memory
+# MimiClaw: Pocket AI Agent
 
 <p align="center">
   <img src="assets/banner.png" alt="MimiClaw" width="480" />
 </p>
 
-**OpenClaw on a $10 device. Local memory. Privacy-first. No OS.**
+**Your own AI assistant on a $10 chip. Chat on Telegram. Remembers everything. No cloud server needed.**
 
-MimiClaw is a minimal reimplementation of [OpenClaw](https://github.com/openclaw/openclaw)'s WebSocket gateway control plane, built to run on an ESP32 microcontroller. It replaces the full Node.js stack with bare-metal firmware, bringing personal AI assistant infrastructure to a $10 chip with no operating system required.
+MimiClaw turns a tiny ESP32-S3 board into a personal AI assistant. Plug it into USB power, connect to WiFi, and talk to it through Telegram — it thinks with Claude and remembers your conversations in plain text files, all running on a chip the size of a thumb.
 
-## Why
+## What It Does
 
-OpenClaw is powerful — multi-channel messaging, agent runtime, tool ecosystem — but it assumes a full computer. MimiClaw strips it down to the core gateway and adds local-first memory, so anyone with a $10 ESP32 can run their own AI assistant hub.
+- **Chat on Telegram** — message your bot from anywhere, get AI replies
+- **Remembers you** — long-term memory + daily notes, survives reboots and power loss
+- **Always on** — plug into USB, it runs 24/7 on ~0.5W
+- **Private** — your conversations stay on your device, not someone else's server
+- **$10 hardware** — just an ESP32-S3 dev board, nothing else
 
-- **$10 total cost** — ESP32 dev board, nothing else
-- **No OS** — bare-metal firmware, boots in seconds
-- **Local memory** — conversations and context stored as Markdown files on SD card / SPIFFS
-- **Privacy-first** — everything stays on your device, no cloud dependency
-- **Cross-platform memory sharing** — plug the SD card into any device, your memory travels with you in plain Markdown
-
-## Architecture
+## How It Works
 
 ```
-┌─────────────────────────────────┐
-│           ESP32                 │
-│                                 │
-│  ┌───────────┐  ┌────────────┐  │
-│  │ WebSocket │  │  Markdown  │  │
-│  │  Gateway  │──│  Memory    │  │
-│  │ (Control  │  │  (SPIFFS / │  │
-│  │  Plane)   │  │   SD Card) │  │
-│  └─────┬─────┘  └────────────┘  │
-│        │                        │
-│  ┌─────┴─────┐                  │
-│  │  Channel   │                 │
-│  │  Router    │                 │
-│  └─────┬─────┘                  │
-└────────┼────────────────────────┘
-         │ WiFi
-    ┌────┴────┐
-    │ Clients │  (CLI / App / Web)
-    └─────────┘
+You (Telegram) ───▶ ESP32-S3 ───▶ Claude AI
+                        │
+                    Memory chip
+                    (your conversations,
+                     personality, notes)
 ```
 
-**Gateway** — WebSocket server on the ESP32, handling session coordination, channel routing, and presence tracking (mirrors OpenClaw's localhost:18789 control plane).
+You send a message on Telegram. The board picks it up over WiFi, asks Claude for a response (using your stored personality and memory as context), and sends the reply back to Telegram. All your chat history and memories are saved on the board's flash storage as readable text files.
 
-**Memory** — Conversations, context, and agent state persisted as `.md` files. Human-readable, version-controllable, portable across any device.
+## Quick Start
 
-**Channel Router** — Lightweight message routing between connected clients and upstream AI providers.
+### What You Need
 
-## Getting Started
+- An **ESP32-S3 dev board** with 16 MB flash and 8 MB PSRAM (e.g. Xiaozhi AI board, ~$10)
+- A **USB Type-C cable**
+- A **Telegram bot token** — talk to [@BotFather](https://t.me/BotFather) on Telegram to create one
+- An **Anthropic API key** — from [console.anthropic.com](https://console.anthropic.com)
 
-### Hardware
-
-- ESP32 dev board (ESP32-WROOM-32 or similar)
-- (Optional) MicroSD card module for expanded memory
-
-### Build & Flash
+### Install
 
 ```bash
-# Clone
+# You need ESP-IDF installed first:
+# https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/get-started/
+
 git clone https://github.com/memovai/mimiclaw.git
 cd mimiclaw
 
-# Build with ESP-IDF
+idf.py set-target esp32s3
 idf.py build
-
-# Flash to ESP32
-idf.py -p /dev/ttyUSB0 flash monitor
+idf.py -p /dev/ttyACM0 flash monitor
 ```
 
-### Connect
+### Set Up
 
-Once flashed, the ESP32 starts a WebSocket server on its local IP. Connect any OpenClaw-compatible client to `ws://<esp32-ip>:18789`.
-
-## Memory Format
-
-Memory is stored as plain Markdown:
+After flashing, a serial console appears. Type these commands:
 
 ```
-memory/
-├── sessions/
-│   └── 2025-01-15-chat.md
-├── context/
-│   └── user-preferences.md
-└── agents/
-    └── default-agent.md
+mimi> wifi_set YourWiFiName YourWiFiPassword
+mimi> set_tg_token 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
+mimi> set_api_key sk-ant-api03-xxxxx
+mimi> restart
 ```
 
-Each file is human-readable and editable. Copy the `memory/` folder to any device to carry your full context with you.
+That's it. After restart, find your bot on Telegram and start chatting.
 
-## Roadmap
+### More Commands
 
-- [ ] Core WebSocket gateway on ESP32
-- [ ] SPIFFS-based Markdown memory read/write
-- [ ] SD card support for larger memory
-- [ ] Basic channel routing (single client)
-- [ ] Multi-client session management
-- [ ] BLE provisioning for WiFi setup
-- [ ] OTA firmware updates
+```
+mimi> wifi_status          # am I connected?
+mimi> set_model claude-sonnet-4-5-20241022   # use a different model
+mimi> memory_read          # see what the bot remembers
+mimi> heap_info            # how much RAM is free?
+mimi> session_list         # list all chat sessions
+mimi> session_clear 12345  # wipe a conversation
+mimi> restart              # reboot
+```
 
-## Compared to OpenClaw
+## Memory
 
-| | OpenClaw | MimiClaw |
-|---|---|---|
-| Runtime | Node.js | ESP32 bare-metal |
-| Cost | Full computer | ~$10 |
-| OS | macOS / Linux | None |
-| Memory | Database | Markdown files |
-| Channels | 15+ platforms | Core gateway |
-| Setup | `npm install` | Flash firmware |
+MimiClaw stores everything as plain text files you can read and edit:
+
+| File | What it is |
+|------|------------|
+| `SOUL.md` | The bot's personality — edit this to change how it behaves |
+| `USER.md` | Info about you — name, preferences, language |
+| `MEMORY.md` | Long-term memory — things the bot should always remember |
+| `2026-02-05.md` | Daily notes — what happened today |
+| `tg_12345.jsonl` | Chat history — your conversation with the bot |
+
+## Also Included
+
+- **WebSocket gateway** on port 18789 — connect from your LAN with any WebSocket client
+- **OTA updates** — flash new firmware over WiFi, no USB needed
+- **Dual-core** — network I/O and AI processing run on separate CPU cores
+
+## For Developers
+
+Technical details live in the `docs/` folder:
+
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — system design, module map, task layout, memory budget, protocols, flash partitions
+- **[docs/TODO.md](docs/TODO.md)** — feature gap tracker and roadmap
 
 ## License
 
@@ -116,4 +107,4 @@ MIT
 
 ## Acknowledgments
 
-Built on the ideas of [OpenClaw](https://github.com/openclaw/openclaw). MimiClaw is an independent project that reimplements the gateway control plane for embedded hardware.
+Inspired by [OpenClaw](https://github.com/openclaw/openclaw). MimiClaw reimplements the core AI agent architecture for embedded hardware — no Linux, no server, just a $10 chip.
