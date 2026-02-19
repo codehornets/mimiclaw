@@ -45,13 +45,17 @@ Telegramでメッセージを送ると、ESP32-S3がWiFi経由で受信し、エ
 ### インストール
 
 ```bash
-# まずESP-IDF v5.5+をインストールしてください:
-# https://docs.espressif.com/projects/esp-idf/en/v5.5.2/esp32s3/get-started/
-
 git clone https://github.com/memovai/mimiclaw.git
 cd mimiclaw
 
-idf.py set-target esp32s3
+# Ubuntu向けクイックセットアップ（ESP-IDF v5.5.2 + esp32s3ツールチェーン）
+./scripts/setup_idf_ubuntu.sh
+
+# 設定済みESP-IDFでビルド
+./scripts/build_ubuntu.sh
+
+# もしくは公式手順で手動セットアップ:
+# https://docs.espressif.com/projects/esp-idf/en/v5.5.2/esp32s3/get-started/
 ```
 
 ### 設定

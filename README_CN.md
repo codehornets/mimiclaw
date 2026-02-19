@@ -45,13 +45,17 @@ MimiClaw 把一块小小的 ESP32-S3 开发板变成你的私人 AI 助理。插
 ### 安装
 
 ```bash
-# 需要先安装 ESP-IDF v5.5+:
-# https://docs.espressif.com/projects/esp-idf/en/v5.5.2/esp32s3/get-started/
-
 git clone https://github.com/memovai/mimiclaw.git
 cd mimiclaw
 
-idf.py set-target esp32s3
+# Ubuntu 一键安装（安装 ESP-IDF v5.5.2 + esp32s3 工具链）
+./scripts/setup_idf_ubuntu.sh
+
+# 使用已配置好的 ESP-IDF 构建
+./scripts/build_ubuntu.sh
+
+# 或按官方文档手动安装：
+# https://docs.espressif.com/projects/esp-idf/en/v5.5.2/esp32s3/get-started/
 ```
 
 ### 配置
